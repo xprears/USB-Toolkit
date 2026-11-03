@@ -75,9 +75,34 @@ try {
 $configPath = [System.IO.Path]::Combine($UsbRoot, "Config\config.ini")
 $packagesPath = [System.IO.Path]::Combine($UsbRoot, "Config\packages.ini")
 $logsDir = [System.IO.Path]::Combine($UsbRoot, "Logs")
-if (-not (Test-Path $logsDir)) {
-    [System.IO.Directory]::CreateDirectory($logsDir) | Out-Null
+$isReadOnlyMedia = $false
+
+# 检查当前介质是否可写 (兼容只读 ISO 光盘挂载或写保护 U 盘)
+try {
+    if (-not (Test-Path $logsDir)) {
+        [System.IO.Directory]::CreateDirectory($logsDir) | Out-Null
+    }
+    $testFile = [System.IO.Path]::Combine($logsDir, ".write_test_" + [System.Guid]::NewGuid().ToString("N"))
+    [System.IO.File]::WriteAllText($testFile, "test")
+    if (Test-Path $testFile) {
+        [System.IO.File]::Delete($testFile)
+    }
+} catch {
+    $isReadOnlyMedia = $true
 }
+
+if ($isReadOnlyMedia) {
+    # 只读介质降级：自动重定向至本地临时目录 %TEMP%\USB-Toolkit\Logs
+    $tempBase = [System.Environment]::GetEnvironmentVariable("TEMP")
+    if ([string]::IsNullOrEmpty($tempBase)) {
+        $tempBase = "C:\Windows\Temp"
+    }
+    $logsDir = [System.IO.Path]::Combine($tempBase, "USB-Toolkit\Logs")
+    if (-not (Test-Path $logsDir)) {
+        [System.IO.Directory]::CreateDirectory($logsDir) | Out-Null
+    }
+}
+
 $logFileName = "Install_" + (Get-Date).ToString("yyyyMMdd_HHmmss") + ".log"
 $currentLogFile = [System.IO.Path]::Combine($logsDir, $logFileName)
 
@@ -95,7 +120,10 @@ $isOnline = Test-NetworkOnline
 # 启动时立即建立日志
 Write-AppLog -Message "==================================================" -Level "INFO" -LogFile $currentLogFile
 Write-AppLog -Message "Windows U 盘离线装机助手已启动" -Level "INFO" -LogFile $currentLogFile
-Write-AppLog -Message "U 盘工作目录: $UsbRoot" -Level "INFO" -LogFile $currentLogFile
+Write-AppLog -Message "程序根目录: $UsbRoot" -Level "INFO" -LogFile $currentLogFile
+if ($isReadOnlyMedia) {
+    Write-AppLog -Message "检测到当前处于只读介质 (ISO/光盘)，日志自动重定向至: $logsDir" -Level "INFO" -LogFile $currentLogFile
+}
 Write-AppLog -Message "检测系统环境: $($osInfo.DisplaySummary)" -Level "INFO" -LogFile $currentLogFile
 
 # -------------------------------------------------------------

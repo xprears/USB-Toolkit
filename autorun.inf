@@ -1,0 +1,5 @@
+[AutoRun]
+open=Start.bat
+action=启动 Windows 离线装机助手
+icon=Start.bat,0
+label=Windows 离线装机助手
