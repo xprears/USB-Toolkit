@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# 离线安装包（体积巨大，由装机/运维人员按需放入对应目录）
+Packages/**/*.exe
+Packages/**/*.msi
+Packages/**/*.zip
+Packages/**/*.7z
+Packages/**/*.iso
+
+# 保持 Packages 目录结构与说明文档
+!Packages/**/.gitkeep
+!Packages/**/README.txt
+
+# 运行时产生的日志文件（保留示例日志和目录占位）
+Logs/*.log
+!Logs/Install_sample.log
+!Logs/.gitkeep
+
+# 临时文件与编辑器配置
+*.tmp
+*.bak
+.idea/
+.vscode/
